@@ -51,6 +51,7 @@ def main():
     parser.add_argument("-vnc_port", type=int, default=0)
     parser.add_argument("-serial_port", type=int, default=1234)
     parser.add_argument("-use_graphic", type=str2bool, default=False)
+    parser.add_argument("-kernel", required=True)
     parser.add_argument("-qmp_path", type=str, default="/tmp/qmp")
     parser.add_argument("-hmp_path", type=str, default="/tmp/hmp")
     args = parser.parse_args()
@@ -66,16 +67,20 @@ def main():
     cmd += " -m %dG" % (args.memory_size)
     cmd += get_memory_option(args.num_cores, args.num_nodes, args.memory_size)
     cmd += " -vnc :%d" % (args.vnc_port)
-    cmd += " -serial tcp::%d,server,nowait" % (args.serial_port)
+    # cmd += " -serial tcp::%d,server,nowait" % (args.serial_port)
+    cmd += " -serial mon:stdio"
     if not args.use_graphic:
         cmd += " -nographic"
     if args.qmp_path != None:
         cmd += " -qmp unix:%s,server,nowait" % (args.qmp_path)
     if args.hmp_path != None:
         cmd += " -monitor unix:%s,server,nowait" % (args.hmp_path)
+    cmd += " -kernel %s" % (args.kernel)
+    cmd += " -append 'console=ttyS0 root=/dev/sda1 rw'"
 
     print(cmd)
     cmd = "sudo numactl --cpunodebind=0 %s" % (cmd)
+
     os.system(cmd)
 
 if __name__ == '__main__':
