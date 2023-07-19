@@ -44,7 +44,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-drive_image_path", required=True)
     parser.add_argument("-ssh_port", type=int, default=2222)
-    parser.add_argument("-enable_kvm", type=str2bool, default=True)
+    parser.add_argument("-enable_kvm", type=str2bool, default=False)
     parser.add_argument("-num_cores", type=int, required=True)
     parser.add_argument("-num_nodes", type=int, required=True)
     parser.add_argument("-memory_size", type=int, required=True)
@@ -52,6 +52,7 @@ def main():
     parser.add_argument("-serial_port", type=int, default=1234)
     parser.add_argument("-use_graphic", type=str2bool, default=False)
     parser.add_argument("-kernel", required=True)
+    parser.add_argument("-debug", type=str2bool, default=False)
     parser.add_argument("-qmp_path", type=str, default="/tmp/qmp")
     parser.add_argument("-hmp_path", type=str, default="/tmp/hmp")
     args = parser.parse_args()
@@ -63,7 +64,7 @@ def main():
     if args.enable_kvm:
         cmd += " -enable-kvm"
     cmd += " -smp %d" % (args.num_cores)
-    cmd += " -cpu host"
+    # cmd += " -cpu host"
     cmd += " -m %dG" % (args.memory_size)
     cmd += get_memory_option(args.num_cores, args.num_nodes, args.memory_size)
     cmd += " -vnc :%d" % (args.vnc_port)
@@ -76,7 +77,10 @@ def main():
     if args.hmp_path != None:
         cmd += " -monitor unix:%s,server,nowait" % (args.hmp_path)
     cmd += " -kernel %s" % (args.kernel)
-    cmd += " -append 'console=ttyS0 root=/dev/sda1 rw'"
+    cmd += " -append 'console=ttyS0 root=/dev/sda1 rw nokaslr'"
+
+    if args.debug:
+        cmd += " -s -S"
 
     print(cmd)
     cmd = "sudo numactl --cpunodebind=0 %s" % (cmd)
